@@ -21,6 +21,7 @@ sdim = 4; udim = 1;
 dyni = 6; dyno = 4;
 
 % GP parameters (one per GP) (Try the effect of different parameters)
+% 6 dimensions per GP, 4 GP in total
 kernelLengthScale = [203.0197  242.9594  240.5070  218.0256
                      33.0219  176.8396  175.9314  178.0185
                      34.6307    7.3903    7.4687   13.0914
@@ -47,6 +48,19 @@ controlTraj     = xx_fulldyn(:, end-udim+1:end)'; % controls
 trainX = xx_fulldyn'; trainX(plant.angi,:) = []; % Remove the angle co-ordinate
 trainY = (yy_fulldyn - xx_fulldyn(:,plant.odei))'; 
 
+%% [my impl] Create the Squared Exponential Kernel
+kernelSize = numel(trainY(1, :));
+K = zeros(4, kernelSize, kernelSize);
+for k=1:4
+    for i=1:kernelSize
+        for j=1:kernelSize;
+            xi = trainX(:, i);
+            xj = trainX(:, j);
+            K(k, i, j) = compute_sek(xi, xj, kernelScaleFactor(k), kernelLengthScale(4 * k));
+        end
+    end
+end
+
 % Run the training loop. Use the full dynamics (cartpole_dynamics.m) to 
 % generate the training dataset at each epoch. 
 % Compare known dynamics against predictions from the GP model
@@ -64,14 +78,14 @@ for k = 1:numTrainEpochs
   end
   
   % Generate a initial state by sampling from a gaussian
-  initState = gaussian(mu0, S0);
+  initState = gaussian(mu0, S0); % start state (s_0)
 
   %% EVALUATE THE GP MODEL AND FULL DYNAMICS USING THE CONTROL TRAJECTORY
   % 1) Get the result from the full dynamics
   % THIS WILL BE USED AS THE TRAINING DATA AT THE END OF THE CURRENT EPOCH
   [xx_fulldyn, yy_fulldyn] = rollout(initState, policy, H, plant);
   rollout_fulldyn = xx_fulldyn(:, plant.odei)'; % odei = state variable indices
-  controlTraj     = xx_fulldyn(:, end-udim+1:end)'; % controls
+  controlTraj     = xx_fulldyn(:, end-udim+1:end)'; % controls / sequence of controls (u0, u1, u2 ... u H-1)
   
   %% STUDENT TODO:
   % 2a) TODO: Get the result from the GP model
@@ -79,10 +93,10 @@ for k = 1:numTrainEpochs
   % Condition on the training data [trainX, trainY] to generate predictions and variances
   % You need to have one GP per output
   % All the 4 variables below need to be populated
-  pred_gp_mean    = zeros(dyno, numDataPtsPerEpoch);
-  pred_gp_var     = ones(dyno, numDataPtsPerEpoch);
-  rollout_gp      = zeros(dyno, numDataPtsPerEpoch); 
-  rollout_gp_var  = ones(dyno, numDataPtsPerEpoch);
+  pred_gp_mean    = zeros(dyno, numDataPtsPerEpoch); % mean predictions from the GP [dx, d^2x, d^2theta, dtheta]
+  pred_gp_var     = ones(dyno, numDataPtsPerEpoch); % variances for the GP predictions
+  rollout_gp      = zeros(dyno, numDataPtsPerEpoch); % state of the system [x, dx, dtheta, theta]
+  rollout_gp_var  = ones(dyno, numDataPtsPerEpoch); % variances for the state
   
   % 2b) TODO: Sample "numTrajSamples" trajectories using the previously computed means 
   % and variances. These will be used to display how the uncertainty
