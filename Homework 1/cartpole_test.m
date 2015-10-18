@@ -48,19 +48,6 @@ controlTraj     = xx_fulldyn(:, end-udim+1:end)'; % controls
 trainX = xx_fulldyn'; trainX(plant.angi,:) = []; % Remove the angle co-ordinate
 trainY = (yy_fulldyn - xx_fulldyn(:,plant.odei))'; 
 
-%% [my impl] Create the Squared Exponential Kernel
-kernelSize = numel(trainY(1, :));
-K = zeros(4, kernelSize, kernelSize);
-for k=1:4
-    for i=1:kernelSize
-        for j=1:kernelSize;
-            xi = trainX(:, i);
-            xj = trainX(:, j);
-            K(k, i, j) = compute_sek(xi, xj, kernelScaleFactor(k), kernelLengthScale(4 * k));
-        end
-    end
-end
-
 % Run the training loop. Use the full dynamics (cartpole_dynamics.m) to 
 % generate the training dataset at each epoch. 
 % Compare known dynamics against predictions from the GP model
@@ -85,7 +72,7 @@ for k = 1:numTrainEpochs
   % THIS WILL BE USED AS THE TRAINING DATA AT THE END OF THE CURRENT EPOCH
   [xx_fulldyn, yy_fulldyn] = rollout(initState, policy, H, plant);
   rollout_fulldyn = xx_fulldyn(:, plant.odei)'; % odei = state variable indices
-  controlTraj     = xx_fulldyn(:, end-udim+1:end)'; % controls / sequence of controls (u0, u1, u2 ... u H-1)
+  controlTraj     = xx_fulldyn(:, end-udim+1:end)'; % controls / sequence of controls (u0, u1, u2 ... u H-1)  
   
   %% STUDENT TODO:
   % 2a) TODO: Get the result from the GP model
@@ -97,6 +84,43 @@ for k = 1:numTrainEpochs
   pred_gp_var     = ones(dyno, numDataPtsPerEpoch); % variances for the GP predictions
   rollout_gp      = zeros(dyno, numDataPtsPerEpoch); % state of the system [x, dx, dtheta, theta]
   rollout_gp_var  = ones(dyno, numDataPtsPerEpoch); % variances for the state
+  
+  % Create the Squared Exponential Kernel
+  kernelSize = numel(trainY(1, :));
+  K = zeros(4, kernelSize, kernelSize);
+  for k=1:4
+      for i=1:kernelSize
+          for j=1:kernelSize;
+              xi = trainX(:, i);
+              xj = trainX(:, j);
+              K(k, i, j) = compute_sek(xi, xj, kernelScaleFactor(k), kernelLengthScale(:, k));
+          end
+      end
+  end
+    
+  for i=1:numDataPtsPerEpoch
+    testXi =    [rollout_fulldyn(1:3, i)
+                sin(rollout_fulldyn(4, i))
+                cos(rollout_fulldyn(4, i))
+                controlTraj(i)];
+    
+    % iterate through each GP, getting mean/variance
+    % dx, d^2x, d^2theta, dtheta    
+    for t=1:dyno
+        I = eye(kernelSize); % identity matrix
+        L = (squeeze(K(t, :, :)) + noiseSigma(t).^2 * I);
+        kStar = zeros(1, numel(trainX(1, :)));
+        for j=1:numel(kStar)
+           kStar(j) = compute_sek(trainX(:, j), testXi, kernelScaleFactor(t), kernelLengthScale(:, t));
+        end
+        dmn = dot(kStar * inv(L), trainY(t, :));
+        pred_gp_mean(t, i) = dmn;
+        rollout_gp(t,i) = rollout_gp(t,i) + dmn;
+        dvariance = compute_sek(testXi, testXi, kernelScaleFactor(t), kernelLengthScale(:, t)) - dot(kStar * inv(L), transpose(kStar));
+        pred_gp_var(t, i) = dvariance;
+        rollout_gp_var(t, i) = rollout_gp_var(t, i) + dvariance;
+    end
+  end
   
   % 2b) TODO: Sample "numTrajSamples" trajectories using the previously computed means 
   % and variances. These will be used to display how the uncertainty
@@ -116,6 +140,44 @@ for k = 1:numTrainEpochs
   pred_gp_var_trajs     = ones(dyno, numDataPtsPerEpoch, numTrajSamples);
   rollout_gp_trajs      = zeros(dyno, numDataPtsPerEpoch, numTrajSamples); 
   rollout_gp_var_trajs  = ones(dyno, numDataPtsPerEpoch, numTrajSamples);
+  
+  for i=1:numDataPtsPerEpoch
+    testXi =    [rollout_fulldyn(1:3, i)
+                sin(rollout_fulldyn(4, i))
+                cos(rollout_fulldyn(4, i))
+                controlTraj(i)];
+    
+    % iterate through each GP, getting mean/variance
+    % dx, d^2x, d^2theta, dtheta    
+    for t=1:dyno
+        I = eye(kernelSize); % identity matrix
+        L = (squeeze(K(t, :, :)) + noiseSigma(t).^2 * I);
+        kStar = zeros(1, numel(trainX(1, :)));
+        for j=1:numel(kStar)
+           kStar(j) = compute_sek(trainX(:, j), testXi, kernelScaleFactor(t), kernelLengthScale(:, t));
+        end
+        
+        % calc mean and variance
+        dmn = dot(kStar * inv(L), trainY(t, :));
+        dvariance = compute_sek(testXi, testXi, kernelScaleFactor(t), kernelLengthScale(:, t)) - dot(kStar * inv(L), transpose(kStar));
+
+        % Sample means and variances
+        for j=1:numTrajSamples
+          sampleMean = gaussian(dmn, dvariance);
+          
+          pred_gp_mean(t, i) = dmn;
+          if(j == 1)
+            rollout_gp(t, i, j) = rollout_gp(t,i) + dmn;
+          else
+              
+          end
+          % Sample variances
+          pred_gp_var(t, i) = dvariance;
+          rollout_gp_var(t, i) = rollout_gp_var(t, i) + dvariance;
+        end
+    end
+  end
+  
   
   %% END TODO
   % 3) Add the full dynamics predictions to the training data
