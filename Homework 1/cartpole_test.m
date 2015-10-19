@@ -88,12 +88,12 @@ for k = 1:numTrainEpochs
   % Create the Squared Exponential Kernel
   kernelSize = numel(trainY(1, :));
   K = zeros(4, kernelSize, kernelSize);
-  for k=1:4
+  for n=1:4
       for i=1:kernelSize
           for j=1:kernelSize;
               xi = trainX(:, i);
               xj = trainX(:, j);
-              K(k, i, j) = compute_sek(xi, xj, kernelScaleFactor(k), kernelLengthScale(:, k));
+              K(n, i, j) = compute_sek(xi, xj, kernelScaleFactor(n), kernelLengthScale(:, n));
           end
       end
   end
@@ -115,7 +115,13 @@ for k = 1:numTrainEpochs
         end
         dmn = dot(kStar * inv(L), trainY(t, :));
         pred_gp_mean(t, i) = dmn;
-        rollout_gp(t,i) = rollout_gp(t,i) + dmn;
+        
+        if i==1
+           rollout_gp(t,i) = initState(t);
+        else
+           rollout_gp(t,i) = rollout_gp(t,i-1) + dmn;    
+        end
+        
         dvariance = compute_sek(testXi, testXi, kernelScaleFactor(t), kernelLengthScale(:, t)) - dot(kStar * inv(L), transpose(kStar));
         pred_gp_var(t, i) = dvariance;
         rollout_gp_var(t, i) = rollout_gp_var(t, i) + dvariance;
@@ -156,24 +162,22 @@ for k = 1:numTrainEpochs
         for j=1:numel(kStar)
            kStar(j) = compute_sek(trainX(:, j), testXi, kernelScaleFactor(t), kernelLengthScale(:, t));
         end
-        
-        % calc mean and variance
-        dmn = dot(kStar * inv(L), trainY(t, :));
-        dvariance = compute_sek(testXi, testXi, kernelScaleFactor(t), kernelLengthScale(:, t)) - dot(kStar * inv(L), transpose(kStar));
-
+                 
         % Sample means and variances
         for j=1:numTrajSamples
-          sampleMean = gaussian(dmn, dvariance);
+          dmn = pred_gp_mean(t, i);
+          dvariance = pred_gp_var(t, i);
+          sampleDelta = gaussian(dmn, dvariance);
           
-          pred_gp_mean(t, i) = dmn;
-          if(j == 1)
-            rollout_gp(t, i, j) = rollout_gp(t,i) + dmn;
+          pred_gp_mean_trajs(t, i, j) = sampleDelta;
+          if i == 1
+            rollout_gp_trajs(t, i, j) = initState(t) + sampleDelta;
           else
-              
+            rollout_gp_trajs(t, i, j) = rollout_gp_trajs(t, i-1, j) + sampleDelta;    
           end
           % Sample variances
-          pred_gp_var(t, i) = dvariance;
-          rollout_gp_var(t, i) = rollout_gp_var(t, i) + dvariance;
+          pred_gp_var_trajs(t, i, j) = dvariance;
+          rollout_gp_var_trajs(t, i, j) = rollout_gp_var_trajs(t, i, j) + dvariance;
         end
     end
   end
@@ -218,6 +222,7 @@ for k = 1:numTrainEpochs
     % Pause to display
     drawnow;
     pause(0.1*dt);
+%     pause(0.001*dt);
   end
   
   % 5) Compare the mean-predictions from the GP and the full dynamics
