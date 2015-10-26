@@ -188,7 +188,7 @@ for t = 1:numSteps
     
      % You might want to plot the mean/co-variance here
      figure(GLOBAL_FIGURE);
-     plotcov2d(mu(1),mu(2), sigma, 'b', 2);
+     plotcov2d(mu(1),mu(2), sigma, 'r', 2);
      
      %plot([mu(1) mu(1)+cos(zHat(1))*100], [mu(2) mu(2)+sin(zHat(1))*100], 'Color', REAL_PATH_COL);
   end

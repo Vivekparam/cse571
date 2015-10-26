@@ -51,6 +51,8 @@ predMu  = g(mu, u);
 % finite difference
 h = 1e-7;
 % h = 0.1;
+
+
 %% Produce G
 muDelx = [  Pos_prev_x + h
             Pos_prev_y
@@ -71,8 +73,8 @@ G1 = zeros(3, 1);
 G2 = zeros(3, 1);
 G3 = zeros(3, 1);
 
-% example for first col, changing x
-for i = [1:2]
+% first col, changing x
+for i = 1:2
     n_0 = predMu(i);
     n_1 = predMuDelX(i);
     dn = n_1 - n_0;
@@ -85,8 +87,8 @@ dtheta = minimizedAngle(theta_1 - theta_0);
 
 G1(3) = dtheta / h;
   
-% example for second col, changing y
-for i = [1:2]
+% second col, changing y
+for i = 1:2
     n_0 = predMu(i);
     n_1 = predMuDelY(i);
     dn = n_1 - n_0;
@@ -99,8 +101,8 @@ dtheta = minimizedAngle(theta_1 - theta_0);
 
 G2(3) = dtheta / h;
 
-% example for third col, changing theta
-for i = [1:2]
+% third col, changing theta
+for i = 1:2
     n_0 = predMu(i);
     n_1 = predMuDelTheta(i);
     dn = n_1 - n_0;
@@ -136,7 +138,7 @@ preduDelY = prediction(mu, uDely);
 preduDelTheta = prediction(mu, uDeltheta);
 
 % first col, changing x
-for i = [1:2]
+for i = 1:2
     n_0 = predMu(i);
     n_1 = preduDelX(i);
     dn = n_1 - n_0;
@@ -212,7 +214,7 @@ H = [ delbDelx delbDely delbDeltheta ];
 
 Q =  [  [filterBeta(1).^ 2 0
             0               0]  ];
-Q = filterBeta(1)^2;
+Q = filterBeta(1);
 
 S = H * sigmaHat * transpose(H) + Q;
 
