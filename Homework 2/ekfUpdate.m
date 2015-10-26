@@ -49,8 +49,8 @@ g=@prediction;
 predMu  = g(mu, u);
 
 % finite difference
-h = 1e-4;
-
+%h = 1e-7;
+h = 0.1;
 %% Produce G
 muDelx = [(Pos_prev_x + h)
             Pos_prev_y
@@ -222,9 +222,9 @@ b_1_Dely = zHatDely(1);
 b_1_Deltheta = zHatDeltheta(1);
 
 
-delbDelx = (b_1_Delx - b_0) / h;
-delbDely = (b_1_Dely - b_0) / h;
-delbDeltheta = (b_1_Deltheta - b_0) / h;
+delbDelx = minimizedAngle(b_1_Delx - b_0) / h;
+delbDely = minimizedAngle(b_1_Dely - b_0) / h;
+delbDeltheta = minimizedAngle(b_1_Deltheta - b_0) / h;
 
 H = [ delbDelx delbDely delbDeltheta ];
 
@@ -237,7 +237,7 @@ S = H * sigmaHat * transpose(H) + Q;
    
 %% Innovation / residual covariance
 
-innovation = z(1) - zHat(1);
+innovation = minimizedAngle(z(1) - zHat(1));
 
 %% Residual
 
@@ -253,11 +253,10 @@ K = sigmaHat * transpose(H) * inv(S);
 mu = predMu + K * innovation; % TODO: add Kalman gain * innovation
 I = eye(3);
 sigma = (I - K * H) * sigmaHat; % TODO: this is not done
-%sigma = sigmaHat;
-%mu = predMu;
+sigma = sigmaHat;
+mu = predMu;
 
 pOfZ = sqrt(det(2 * pi * S)) * exp(-0.5 * transpose(innovation) * inv(S) * innovation);
-testLine = 5;
 
 
    

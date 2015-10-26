@@ -188,7 +188,7 @@ for t = 1:numSteps
     
      % You might want to plot the mean/co-variance here
      figure(GLOBAL_FIGURE);
-     plotcov2d(mu(1),mu(2), sigma,'r', 1);
+     plotcov2d(mu(1),mu(2), sigma, 'b', 2);
   end
 
   %% TODO: REMOVE THIS ONCE YOU WANT TO TEST YOUR FILTERS
