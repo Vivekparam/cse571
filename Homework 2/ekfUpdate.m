@@ -49,84 +49,80 @@ g=@prediction;
 predMu  = g(mu, u);
 
 % finite difference
-%h = 1e-7;
-h = 0.1;
+h = 1e-7;
+% h = 0.1;
 %% Produce G
-muDelx = [(Pos_prev_x + h)
+muDelx = [  Pos_prev_x + h
             Pos_prev_y
             Pos_prev_theta];
-muDely = [(Pos_prev_x)
-    Pos_prev_y + h
-    Pos_prev_theta];
-muDeltheta = [Pos_prev_x
-    Pos_prev_y
-    Pos_prev_theta + h];
+muDely = [  Pos_prev_x
+            Pos_prev_y + h
+            Pos_prev_theta];
+
+muDeltheta = [  Pos_prev_x
+                Pos_prev_y
+                minimizedAngle(Pos_prev_theta + h)  ];
+
 predMuDelX = prediction(muDelx, u);
 predMuDelY = prediction(muDely, u);
 predMuDelTheta = prediction(muDeltheta, u);
 
-% example for first col, changing x
-x_0 = predMu(1);
-x_1 = predMuDelX(1);
+G1 = zeros(3, 1);
+G2 = zeros(3, 1);
+G3 = zeros(3, 1);
 
-y_0 = predMu(2);
-y_1 = predMuDelX(2);
+% example for first col, changing x
+for i = [1:2]
+    n_0 = predMu(i);
+    n_1 = predMuDelX(i);
+    dn = n_1 - n_0;
+    G1(i) = dn / h;
+end
 
 theta_0 = predMu(3);
 theta_1 = predMuDelX(3);
+dtheta = minimizedAngle(theta_1 - theta_0);
 
-dx = x_1 - x_0;
-dy = y_1 - y_0;
-dtheta = theta_1 - theta_0;
-
-G1 = [dx/h
-      dy/h
-      dtheta/h];
-  
+G1(3) = dtheta / h;
   
 % example for second col, changing y
-x_0 = predMu(1);
-x_1 = predMuDelY(1);
-
-y_0 = predMu(2);
-y_1 = predMuDelY(2);
+for i = [1:2]
+    n_0 = predMu(i);
+    n_1 = predMuDelY(i);
+    dn = n_1 - n_0;
+    G2(i) = dn / h;
+end
 
 theta_0 = predMu(3);
 theta_1 = predMuDelY(3);
+dtheta = minimizedAngle(theta_1 - theta_0);
 
-dx = x_1 - x_0;
-dy = y_1 - y_0;
-dtheta = theta_1 - theta_0;
+G2(3) = dtheta / h;
 
-G2 = [dx/h
-      dy/h
-      dtheta/h];
-  
 % example for third col, changing theta
-x_0 = predMu(1);
-x_1 = predMuDelTheta(1);
-
-y_0 = predMu(2);
-y_1 = predMuDelTheta(2);
+for i = [1:2]
+    n_0 = predMu(i);
+    n_1 = predMuDelTheta(i);
+    dn = n_1 - n_0;
+    G3(i) = dn / h;
+end
 
 theta_0 = predMu(3);
 theta_1 = predMuDelTheta(3);
+dtheta = minimizedAngle(theta_1 - theta_0);
 
-dx = x_1 - x_0;
-dy = y_1 - y_0;
-dtheta = theta_1 - theta_0;
-
-G3 = [dx/h
-      dy/h
-      dtheta/h];
+G3(3) = dtheta / h;
 
 G = horzcat(G1, G2);
 G = horzcat(G, G3);
 
 
 %% Produce V
+V1 = zeros(3, 1);
+V2 = zeros(3, 1);
+V3 = zeros(3, 1);
 
-uDelx = [Delta_rot1 + h
+uDelx = [minimizedAngle(Delta_rot1 + h)
          Delta_trans
          Delta_rot2];
 uDely = [Delta_rot1
@@ -134,70 +130,56 @@ uDely = [Delta_rot1
          Delta_rot2];
 uDeltheta = [Delta_rot1
          Delta_trans
-         Delta_rot2 + h];
+         minimizedAngle(Delta_rot2 + h)];
 preduDelX = prediction(mu, uDelx);
 preduDelY = prediction(mu, uDely);
 preduDelTheta = prediction(mu, uDeltheta);
 
-% example for first col, changing x
-x_0 = predMu(1);
-x_1 = preduDelX(1);
-
-y_0 = predMu(2);
-y_1 = preduDelX(2);
-
+% first col, changing x
+for i = [1:2]
+    n_0 = predMu(i);
+    n_1 = preduDelX(i);
+    dn = n_1 - n_0;
+    V1(i) = dn / h;
+end
 theta_0 = predMu(3);
 theta_1 = preduDelX(3);
+dtheta = minimizedAngle(theta_1 - theta_0);
 
-dx = x_1 - x_0;
-dy = y_1 - y_0;
-dtheta = theta_1 - theta_0;
-
-V1 = [dx/h
-      dy/h
-      dtheta/h];
+V1(3) = dtheta / h;
 
 % second col, changing y control
-x_0 = predMu(1);
-x_1 = preduDelY(1);
-
-y_0 = predMu(2);
-y_1 = preduDelY(2);
-
+for i = [1:2]
+    n_0 = predMu(i);
+    n_1 = preduDelY(i);
+    dn = n_1 - n_0;
+    V2(i) = dn / h;
+end
 theta_0 = predMu(3);
 theta_1 = preduDelY(3);
 
-dx = x_1 - x_0;
-dy = y_1 - y_0;
-dtheta = theta_1 - theta_0;
+dtheta = minimizedAngle(theta_1 - theta_0);
 
-V2 = [dx/h
-      dy/h
-      dtheta/h];
+V2(3) = dtheta / h;
   
   
 % third col, changing theta control
-x_0 = predMu(1);
-x_1 = preduDelTheta(1);
-
-y_0 = predMu(2);
-y_1 = preduDelTheta(2);
+for i = [1:2]
+    n_0 = predMu(i);
+    n_1 = preduDelTheta(i);
+    dn = n_1 - n_0;
+    V3(i) = dn / h;
+end
 
 theta_0 = predMu(3);
 theta_1 = preduDelTheta(3);
+dtheta = minimizedAngle(theta_1 - theta_0);
 
-dx = x_1 - x_0;
-dy = y_1 - y_0;
-dtheta = theta_1 - theta_0;
-
-V3 = [dx/h
-      dy/h
-      dtheta/h];
+V3(3) = dtheta / h;
 
 % Combine to form V
 V = horzcat(V1, V2);
 V = horzcat(V, V3);
-
 
 %% Produce SigmaHat
 M_t = diag(noiseFromMotion(u, filterAlphas));
@@ -250,13 +232,44 @@ K = sigmaHat * transpose(H) * inv(S);
 
 %% Correction
 
-mu = predMu + K * innovation; % TODO: add Kalman gain * innovation
+mu = predMu + K * innovation;
 I = eye(3);
-sigma = (I - K * H) * sigmaHat; % TODO: this is not done
-sigma = sigmaHat;
-mu = predMu;
+sigma = (I - K * H) * sigmaHat;
+% sigma = sigmaHat;
+% mu = predMu;
 
 pOfZ = sqrt(det(2 * pi * S)) * exp(-0.5 * transpose(innovation) * inv(S) * innovation);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
    

@@ -189,13 +189,15 @@ for t = 1:numSteps
      % You might want to plot the mean/co-variance here
      figure(GLOBAL_FIGURE);
      plotcov2d(mu(1),mu(2), sigma, 'b', 2);
+     
+     %plot([mu(1) mu(1)+cos(zHat(1))*100], [mu(2) mu(2)+sin(zHat(1))*100], 'Color', REAL_PATH_COL);
   end
 
   %% TODO: REMOVE THIS ONCE YOU WANT TO TEST YOUR FILTERS
   % mu = noiseFreeRobot;
   %sigma = initialsigma;
   %pOfZ = 1.0;
-  disp('Currently ignoring filter values');
+  % disp('Currently ignoring filter values');
   %% END REMOVE
 
   % Concatenate results
@@ -210,8 +212,8 @@ for t = 1:numSteps
 
   %% TODO?: you may want to plot and evaluate additional filter results here
   % example of a second plot (feel free to remove):
-  % positionDriftExample = sqrt(sumsq( (data(1:t,8:9) - data(1:t,11:12)), 2));
-  % figure(ERROR_FIGURE); clf; plot(positionDriftExample);
+  %positionDriftExample = sqrt((data(1:t,8:9) - data(1:t,11:12)));
+  %figure(ERROR_FIGURE); clf; plot(positionDriftExample);
 
   errors(t,:) = mu - realRobot;
   errors(t,3) = minimizedAngle(errors(t,3));
