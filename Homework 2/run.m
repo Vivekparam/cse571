@@ -187,14 +187,14 @@ for t = 1:numSteps
 			   markerId, getfieldinfo);
     
      % You might want to plot the mean/co-variance here
-     % figure(GLOBAL_FIGURE);
-     % plotcov2d(args)
+     figure(GLOBAL_FIGURE);
+     plotcov2d(mu(1),mu(2), sigma,'r', 1);
   end
 
   %% TODO: REMOVE THIS ONCE YOU WANT TO TEST YOUR FILTERS
-  mu = noiseFreeRobot;
-  sigma = initialsigma;
-  pOfZ = 1.0;
+  % mu = noiseFreeRobot;
+  %sigma = initialsigma;
+  %pOfZ = 1.0;
   disp('Currently ignoring filter values');
   %% END REMOVE
 

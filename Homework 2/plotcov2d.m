@@ -16,7 +16,7 @@ mu = [ centerX; centerY];
 lam1 = D(1,1);
 lam2 = D(2,2);
 if lam1 < 0 | lam2 < 0
-  disp("Non-positive definite matrix:");
+  disp('Non-positive definite matrix:');
   disp(cov);
   return;
 end
