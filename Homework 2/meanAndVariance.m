@@ -1,6 +1,5 @@
-% Assumes equally weighted particles.
 function [mu, sigma] = meanAndVariance( state, numSamples)
-
+% Assumes equally weighted particles.
 mu = mean(state')';
 
 % orientation is a bit more tricky.

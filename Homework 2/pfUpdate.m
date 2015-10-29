@@ -23,21 +23,31 @@ function [particles, weights, mu, sigma, ...
 %  sigma        - state covar at time t 
 %  predParticles- predicted particles from PF prediction step
 %  predWeights  - predicted particle weights from PF prediction step
-%  predMu       - state mean from EKF prediction step
-%  predSigma    - state covar from EKF prediction step
+%  predMu       - state mean from PF prediction step
+%  predSigma    - state covar from PF prediction step
 %  pOfZ         - observation likelihood
 % You should almost certainly leave the header the way it is.  In particular, you need to compute all return values.
 
 % TODO: Remove this line
-[mu, sigma, predParticles, predWeights, predMu, predSigma, pOfZ] = deal([]);
 
 % ----------------------------------------------------------------
 % ----------------------------------------------------------------
 % Prediction step
 % ----------------------------------------------------------------
 % ----------------------------------------------------------------
-
-
+predWeights = zeros(numParticles, 1);
+n_factor = 0; % normalization factor
+for i=1:numParticles
+    predParticles(i, :)  = sampleOdometry(u, particles(i, :), alphas);
+    zHat_i = observation(predParticles(i, :), FIELDINFO, markerId);
+    weight = likelihood(beta, minimizedAngle(z(1) - zHat_i(1)));
+    predWeights(i) = weight;
+    n_factor = n_factor + weight;
+    
+end
+[predMu, predSigma] = meanAndVariance(transpose(predParticles), numParticles);
+pOfZ = mean(predWeights);
+predWeights = predWeights / n_factor; % normalize weights
 
 % ----------------------------------------------------------------
 % ----------------------------------------------------------------
@@ -45,4 +55,6 @@ function [particles, weights, mu, sigma, ...
 % ----------------------------------------------------------------
 % ----------------------------------------------------------------
 
+[particles, weights] = resample(predParticles, predWeights);
 
+[mu, sigma] = meanAndVariance(transpose(particles), numParticles); 

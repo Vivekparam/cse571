@@ -50,7 +50,6 @@ for i = 1:3
     temp(i) = temp(i) + h;
     predMuDel = prediction(temp, u);
     G(:, i) = predMuDel - predMu;
-    %G(3, i) = minimizedAngle(G(3, i));
 end
 
 G = G / h;
@@ -63,7 +62,6 @@ for i = 1:3
     temp(i) = temp(i) + h;
     predMuDel = prediction(mu, temp);
     V(:, i) = predMuDel - predMu;
-    %V(3, i) = minimizedAngle(V(3, i));
 end
 
 V = V / h;

@@ -176,9 +176,9 @@ for t = 1:numSteps
 						  markerId, getfieldinfo);
                       
     % You might want to plot the particles here. You could also plot co-variance matrix
-    % figure(GLOBAL_FIGURE);
-    % plotSamples(args)
-    % plotcov2d(args)
+    figure(GLOBAL_FIGURE);
+    plotSamples(transpose(particles), 'r');
+    plotcov2d(mu(1),mu(2), sigma, 'r', 2);
   else
     % [EKFResults...] = ekfUpdate(args)
     [mu, sigma, predMu, predSigma, zHat, pOfZ, G, V, H, K] = ekfUpdate(mu, sigma, ...
@@ -192,13 +192,6 @@ for t = 1:numSteps
      
      %plot([mu(1) mu(1)+cos(zHat(1))*100], [mu(2) mu(2)+sin(zHat(1))*100], 'Color', REAL_PATH_COL);
   end
-
-  %% TODO: REMOVE THIS ONCE YOU WANT TO TEST YOUR FILTERS
-  % mu = noiseFreeRobot;
-  %sigma = initialsigma;
-  %pOfZ = 1.0;
-  % disp('Currently ignoring filter values');
-  %% END REMOVE
 
   % Concatenate results
   muList(t,:) = mu;
