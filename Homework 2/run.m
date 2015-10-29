@@ -176,9 +176,9 @@ for t = 1:numSteps
 						  markerId, getfieldinfo);
                       
     % You might want to plot the particles here. You could also plot co-variance matrix
-    figure(GLOBAL_FIGURE);
-    plotSamples(transpose(particles), 'r');
-    plotcov2d(mu(1),mu(2), sigma, 'r', 2);
+   % figure(GLOBAL_FIGURE);
+   % plotSamples(transpose(particles), 'r');
+   % plotcov2d(mu(1),mu(2), sigma, 'r', 2);
   else
     % [EKFResults...] = ekfUpdate(args)
     [mu, sigma, predMu, predSigma, zHat, pOfZ, G, V, H, K] = ekfUpdate(mu, sigma, ...
@@ -187,8 +187,8 @@ for t = 1:numSteps
 			   markerId, getfieldinfo);
     
      % You might want to plot the mean/co-variance here
-     figure(GLOBAL_FIGURE);
-     plotcov2d(mu(1),mu(2), sigma, 'r', 2);
+    % figure(GLOBAL_FIGURE);
+    % plotcov2d(mu(1),mu(2), sigma, 'r', 2);
      
      %plot([mu(1) mu(1)+cos(zHat(1))*100], [mu(2) mu(2)+sin(zHat(1))*100], 'Color', REAL_PATH_COL);
   end
@@ -217,7 +217,7 @@ for t = 1:numSteps
     sigma
     condNumber
     sigma = eye(3);
-    fflush(stdout);
+   % fflush(stdout);
   end
   mahalanobis(t) = errors(t,:)*inv(sigma)*errors(t,:)';
 

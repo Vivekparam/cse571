@@ -1,6 +1,6 @@
 % Initial settings 
 numSteps = 200;
-usePf = false; % change this to use particle filter
+usePf = true; % change this to use particle filter
 numParticles = 100;
 
 % Run different experiments
@@ -32,8 +32,20 @@ pOfZs
 
 % Generate plots. You might want to change the names of these plots to
 % something informative
-figure(1); plot(powers, positionErrors); title ([baseString, 'positionErrors']); print('figure1.png', '-dpng');
-figure(2); plot(powers, ANEES); title ([baseString, 'ANEES']); print('figure2.png', '-dpng');
-figure(3); plot(powers, pOfZs); title ([baseString, 'pOfZs']); print('figure3.png', '-dpng');
+powers = powers * 2;
+figure(1); plot(powers, positionErrors); title ([baseString, 'positionErrors']); 
+xlabel('-1/64 < alphaBetaFactors < 64 (log_2 scale)');
+ylabel('Mean Position Error');
+print('figure1.png', '-dpng');
+figure(2); plot(powers, ANEES); title ([baseString, 'ANEES']); 
+xlabel('-1/64 < alphaBetaFactors < 64 (log_2 scale)');
+ylabel('ANEES');
+print('figure2.png', '-dpng');
+
+figure(3); plot(powers, pOfZs); title ([baseString, 'pOfZs']); 
+xlabel('-1/64 < alphaBetaFactors < 64 (log_2 scale)');
+ylabel('pOfZ');
+print('figure3.png', '-dpng');
+
 %disp('paused...');
 %pause();
